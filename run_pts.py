@@ -28,10 +28,15 @@ MIN_GAP     = 1.0               # минимальный зазор между �
 CLOSED_BOTTOM = True            # плоское дно на ленте
 PROFILE_MODE  = True            # одна камера сверху: площадь по огибающей
 MIN_VOLUME  = 1.0               # фигуры мельче этого - мусор, не показывать
-MIN_BIN_FRAC = 0.10             # доля от медианного заполнения слоя, ниже которой слой считается пустым; 0 = откл
-DISPLACEMENT_PER_FRAME = 0.0    # 0, если облако уже развёрнуто вдоль движения; иначе шаг ленты на один индекс среза
+TARGET_VOLUME = 20.0            # целевой объём порции для поиска точек реза;
+                                # None = резка отключена
+MIN_BIN_FRAC = 0.10             # доля от медианного заполнения слоя, ниже
+                                # которой слой считается пустым; 0 = откл.
+DISPLACEMENT_PER_FRAME = 0.0    # 0, если облако уже развёрнуто вдоль движения;
+                                # иначе шаг ленты на один индекс среза
 VOXEL       = 0.5               # размер вокселя фильтра шума
-MIN_VOXEL_PTS = 40              # порог точек в вокселе (ниже - шум); None = автомат, 0 = отключить
+MIN_VOXEL_PTS = 40              # порог точек в вокселе (ниже - шум);
+                                # None = автомат, 0 = отключить
 
 # -------------------------------------------------------------------
 
@@ -92,7 +97,8 @@ def diagnose(frames, pts, u, n):
 
 
 def denoise(pts, voxel, min_pts):
-    # выбрасывает точки из редких вокселей: шум висит одиночками, а поверхность после сканера даёт плотные воксели
+    """Выбрасывает точки из редких вокселей: шум висит одиночками,
+    а поверхность после сканера даёт плотные воксели."""
     if min_pts is not None and min_pts <= 0:
         return np.ones(len(pts), dtype=bool)
     ijk = np.floor(pts / voxel).astype(np.int64)
@@ -132,7 +138,8 @@ def main():
     print("фильтр ленты: осталось %d из %d точек" % (keep.sum(), len(pts)))
     frames, pts = frames[keep], pts[keep]
 
-    # фильтр редких слоёв: плотный мусор в зазорах на порядки реже, чем поверхность деталей
+    # фильтр редких слоёв: плотный мусор в зазорах на порядки реже,
+    # чем поверхность деталей
     if MIN_BIN_FRAC > 0:
         sb = np.floor((pts @ u) / SLICE_STEP).astype(int)
         _, inv, cnt = np.unique(sb, return_inverse=True, return_counts=True)
@@ -152,10 +159,15 @@ def main():
         if vol >= MIN_VOLUME:
             print("Figure %d: V = %.1f mm^3" % (fig, vol))
 
+    def cut_report(fig, vol, len_start, len_frame):
+        print("Рез: фигура %d, V = %.1f mm^3, от начала фигуры %.2f мм, "
+              "от последнего кадра %.2f мм" % (fig, vol, len_start, len_frame))
+
     integ = ConveyorVolume(u, belt_normal=n, belt_level=belt,
                            slice_step=SLICE_STEP, cell=CELL,
                            min_gap=MIN_GAP, closed_bottom=CLOSED_BOTTOM,
-                           profile_mode=PROFILE_MODE, on_object=live_report)
+                           profile_mode=PROFILE_MODE, on_object=live_report,
+                           target_volume=TARGET_VOLUME, on_cut=cut_report)
 
     # кадры подаются в порядке индексов срезов
     order = np.argsort(frames, kind="stable")
