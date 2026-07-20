@@ -1,0 +1,8 @@
+numpy
+scipy
+opencv-python
+matplotlib
+numpy-stl
+shapely
+mapbox_earcut
+open3d

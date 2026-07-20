@@ -12,7 +12,9 @@
 Назначение фильтров и подбор параметров — в ALGORITHM.md, раздел 5.
 """
 
-import sys
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np
 from volume_core import ConveyorVolume
 
@@ -20,7 +22,7 @@ from volume_core import ConveyorVolume
 
 DIRECTION   = [1.0, 0.0, 0.0]   # ось, вдоль которой развёрнуто облако
 BELT_NORMAL = [0.0, 0.0, 1.0]   # ось высоты
-BELT_LEVEL  = -3.9              # уровень ленты; None = оценить автоматом
+BELT_LEVEL  = -1.0              # уровень ленты; None = оценить автоматом
 BELT_EPS    = 0.4               # точки ниже (лента + eps) выбрасываются
 SLICE_STEP  = 0.3               # толщина слоя ds
 CELL        = 0.1               # пиксель растра площади
@@ -28,12 +30,16 @@ MIN_GAP     = 1.0               # минимальный зазор между �
 CLOSED_BOTTOM = True            # плоское дно на ленте
 PROFILE_MODE  = True            # одна камера сверху: площадь по огибающей
 MIN_VOLUME  = 1.0               # фигуры мельче этого - мусор, не показывать
-TARGET_VOLUME = 20.0            # целевой объём порции для поиска точек реза;
+TARGET_VOLUME = None            # целевой объём порции для поиска точек реза;
                                 # None = резка отключена
 MIN_BIN_FRAC = 0.10             # доля от медианного заполнения слоя, ниже
                                 # которой слой считается пустым; 0 = откл.
 DISPLACEMENT_PER_FRAME = 0.0    # 0, если облако уже развёрнуто вдоль движения;
                                 # иначе шаг ленты на один индекс среза
+W_MIN       = -55              # поперечные границы рабочей зоны ленты:
+W_MAX       = 15              # точки вне (W_MIN..W_MAX) по оси поперёк
+                                # ленты выбрасываются (отражения, фон);
+                                # None = не ограничивать
 VOXEL       = 0.5               # размер вокселя фильтра шума
 MIN_VOXEL_PTS = 40              # порог точек в вокселе (ниже - шум);
                                 # None = автомат, 0 = отключить
@@ -126,6 +132,19 @@ def main():
         return
 
     belt = belt_auto if BELT_LEVEL is None else BELT_LEVEL
+
+    # поперечный фильтр: отражения и фон живут за пределами ленты
+    if W_MIN is not None or W_MAX is not None:
+        v = np.cross(n, u); v /= np.linalg.norm(v)
+        w = pts @ v
+        keep = np.ones(len(pts), dtype=bool)
+        if W_MIN is not None:
+            keep &= w >= W_MIN
+        if W_MAX is not None:
+            keep &= w <= W_MAX
+        print("поперечный фильтр: осталось %d из %d точек"
+              % (keep.sum(), len(pts)))
+        frames, pts = frames[keep], pts[keep]
 
     # фильтр шума: одиночные выбросы заполняют зазоры и склеивают предметы
     keep = denoise(pts, VOXEL, MIN_VOXEL_PTS)

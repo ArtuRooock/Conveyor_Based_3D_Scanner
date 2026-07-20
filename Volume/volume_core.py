@@ -298,18 +298,27 @@ class ConveyorVolume:
         img = np.zeros(ij.max(axis=0) + k_cap + 3, dtype=bool)
         img[ij[:, 0], ij[:, 1]] = True
 
-        # адаптивное замыкание: растим радиус, пока контур не сомкнётся
+        # адаптивное замыкание: пробуем радиусы от стартового до потолка
+        # и берём наименьший, при котором площадь вышла на максимум.
+        # Останавливаться по первой сработавшей заливке нельзя: маленький
+        # замкнутый контур (дырка в сечении) заливается раньше основного
         st = ndimage.generate_binary_structure(2, 2)
         img = ndimage.binary_dilation(img, st, iterations=k)
+        tries = []
         while True:
             filled = ndimage.binary_fill_holes(img)
-            if (filled.sum() - img.sum() > 0.01 * img.sum()) or k >= k_cap:
+            er = ndimage.binary_erosion(filled, st, iterations=k)
+            tries.append(int(er.sum()))
+            if k >= k_cap:
                 break
             grow = min(k, k_cap - k)
             img = ndimage.binary_dilation(img, st, iterations=grow)
             k += grow
-        img = ndimage.binary_erosion(filled, st, iterations=k)
-        return float(img.sum()) * cell * cell
+        best = max(tries)
+        for area_px in tries:
+            if area_px >= 0.6 * best:
+                return float(area_px) * cell * cell
+        return float(best) * cell * cell
 
     @staticmethod
     def _profile_area(pts, cell):
