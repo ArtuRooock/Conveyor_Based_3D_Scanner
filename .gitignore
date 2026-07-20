@@ -1,0 +1,6 @@
+__pycache__/
+.venv/
+Volume/data*
+!Volume/data/.gitkeep
+Volume/models/*
+!Volume/models/.gitkeep
