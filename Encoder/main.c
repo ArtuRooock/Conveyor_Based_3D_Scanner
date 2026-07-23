@@ -19,7 +19,7 @@
 #define STEPS_PER_REVOLUTION   3600.0f
 
 // Длина окружности колеса/вала, вращаемого энкодером, в мм
-#define WHEEL_CIRCUMFERENCE_MM 107.206851L
+#define WHEEL_CIRCUMFERENCE_MM  8.57232L
 
 // Интервал между замерами скорости, мс
 #define MEASURE_INTERVAL_MS 200
@@ -60,11 +60,15 @@ void app_main(void)
         prev_position = state.position;
         prev_time_us = now_us;
 
-        printf("%ld,%lld,%.3f,%.2f\n",
-       (long)state.position,
-       (long long)now_us,
-       speed_rps,
-       speed_mms);
+        // Единственная телеметрическая строка на измерение - чистый JSON.
+        // Именно её на стороне ПК читает SpeedReader в main.py и достаёт
+        // из неё только поле "speed_mms" (скорость конвейера, мм/с).
+        printf("{\"pos\":%ld,\"dir\":%d,\"t_us\":%lld,\"speed_rps\":%.3f,\"speed_mms\":%.2f}\n",
+               (long)state.position*(-1),
+               (int)state.direction,
+               (long long)now_us,
+               speed_rps*(-1),
+               speed_mms*(-1));
     }
 
     ESP_ERROR_CHECK(rotary_encoder_uninit(&info));
