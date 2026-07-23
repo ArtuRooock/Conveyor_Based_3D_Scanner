@@ -7,6 +7,10 @@
 
 Использование:
     python plot_pts.py файл.pts
+
+Формат файла: "кадр x y z" (4 числа) или "x y z" (3 числа).
+Оси и масштаб координат задаются ниже - держите их такими же,
+как в run_pts.py, иначе картинки не совпадут с расчётом.
 """
 
 import sys, os
@@ -17,14 +21,18 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-DIRECTION   = [1.0, 0.0, 0.0]
-BELT_NORMAL = [0.0, 0.0, 1.0]
+UNIT_SCALE  = 10.0               # 10.0, если координаты в сантиметрах
+DIRECTION   = [1.0, 0.0, 0.0]   # ось движения ленты
+BELT_NORMAL = [0.0, 1.0, 0.0]   # ось высоты
 
 
 def main():
     path = sys.argv[1]
     data = np.loadtxt(path)
-    pts = data[:, 1:4]
+    if data.ndim != 2 or data.shape[1] not in (3, 4):
+        raise ValueError("ожидался формат 'кадр x y z' или 'x y z'")
+    # 4 колонки - с индексом среза, 3 - без него
+    pts = (data[:, 1:4] if data.shape[1] == 4 else data) * UNIT_SCALE
     stem = path.rsplit(".", 1)[0]
 
     u = np.asarray(DIRECTION, float); u /= np.linalg.norm(u)
@@ -35,7 +43,7 @@ def main():
     w = pts @ v
     h = pts @ n
 
-    # гистограмма высот
+    # 1) гистограмма высот
     fig, ax = plt.subplots(figsize=(9, 4))
     ax.hist(h, bins=400)
     ax.set_yscale("log")
@@ -45,7 +53,7 @@ def main():
     fig.tight_layout()
     fig.savefig(stem + "_hist.png", dpi=130)
 
-    # вид сбоку (прореживаю до ~200 тыс. точек)
+    # 2) вид сбоку (прореживаю до ~200 тыс. точек)
     step = max(len(pts) // 200_000, 1)
     fig, ax = plt.subplots(figsize=(14, 4))
     ax.scatter(s[::step], h[::step], s=0.3, linewidths=0)
@@ -56,7 +64,7 @@ def main():
     fig.tight_layout()
     fig.savefig(stem + "_side.png", dpi=130)
 
-    # поперечные срезы в 5 местах по длине
+    # 3) поперечные срезы в 5 местах по длине
     qs = np.percentile(s, [10, 30, 50, 70, 90])
     fig, axes = plt.subplots(1, 5, figsize=(16, 4), sharey=True)
     half = 0.5   # полутолщина среза

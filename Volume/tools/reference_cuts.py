@@ -3,7 +3,10 @@
 объём и координаты резов, делящих модель на куски равного объёма.
 
 Использование:
-    python reference_cuts.py модель.stl N_КУСКОВ
+    python reference_cuts.py модель.stl N_КУСКОВ [ОСЬ]
+
+ОСЬ - вдоль какой оси модель едет по ленте: x, y или z (по умолчанию x).
+Смотрите габариты модели: длинная сторона обычно и есть ось движения.
 
 Например: python reference_cuts.py fish.stl 4
 выведет полный объём, целевой объём куска V/N и координаты N-1 резов
@@ -31,7 +34,7 @@ def signed_volume(tris):
     return float(np.einsum("ij,ij->i", np.cross(a, b), c).sum()) / 6.0
 
 
-def clip_volume(tris, t):
+def clip_volume(tris, t, axis=0):
     """Объём части меша с x <= t.
 
     По теореме о дивергенции для поля F = (x - t, 0, 0):
@@ -48,17 +51,17 @@ def clip_volume(tris, t):
         norm = np.linalg.norm(nvec)
         if norm < 1e-15:
             continue
-        nx = nvec[0] / norm
+        nx = nvec[axis] / norm
 
         # отсечение треугольника полуплоскостью x <= t
         poly = []
         for i in range(3):
             p, q = tri[i], tri[(i + 1) % 3]
-            pin, qin = p[0] <= t, q[0] <= t
+            pin, qin = p[axis] <= t, q[axis] <= t
             if pin:
                 poly.append(p)
             if pin != qin:
-                s = (t - p[0]) / (q[0] - p[0])
+                s = (t - p[axis]) / (q[axis] - p[axis])
                 poly.append(p + s * (q - p))
         if len(poly) < 3:
             continue
@@ -68,16 +71,16 @@ def clip_volume(tris, t):
         for i in range(1, len(poly) - 1):
             a, b, c = poly[0], poly[i], poly[i + 1]
             area2 = np.linalg.norm(np.cross(b - a, c - a))
-            xc = (a[0] + b[0] + c[0]) / 3.0
+            xc = (a[axis] + b[axis] + c[axis]) / 3.0
             total += nx * (xc - t) * area2 / 2.0
     return total
 
 
-def equal_volume_cuts(tris, n_pieces, tol=1e-6):
+def equal_volume_cuts(tris, n_pieces, tol=1e-6, axis=0):
     """Координаты x резов, делящих модель на n_pieces равных по объёму."""
     v_total = abs(signed_volume(tris))
-    x_min = tris[:, :, 0].min()
-    x_max = tris[:, :, 0].max()
+    x_min = tris[:, :, axis].min()
+    x_max = tris[:, :, axis].max()
     sign = 1.0 if signed_volume(tris) > 0 else -1.0
 
     cuts = []
@@ -86,7 +89,7 @@ def equal_volume_cuts(tris, n_pieces, tol=1e-6):
         lo, hi = x_min, x_max
         while hi - lo > tol * (x_max - x_min):
             mid = 0.5 * (lo + hi)
-            if sign * clip_volume(tris, mid) < target:
+            if sign * clip_volume(tris, mid, axis) < target:
                 lo = mid
             else:
                 hi = mid
@@ -99,25 +102,30 @@ def main():
         print(__doc__)
         return
     path, n = sys.argv[1], int(sys.argv[2])
+    axis_name = sys.argv[3].lower() if len(sys.argv) > 3 else "x"
+    axis = {"x": 0, "y": 1, "z": 2}[axis_name]
 
     m = mesh.Mesh.from_file(path)
     tris = m.vectors.astype(float)          # (M, 3, 3)
 
-    v_total, cuts = equal_volume_cuts(tris, n)
-    x_min = tris[:, :, 0].min()
-    x_max = tris[:, :, 0].max()
+    v_total, cuts = equal_volume_cuts(tris, n, axis=axis)
+    x_min = tris[:, :, axis].min()
+    x_max = tris[:, :, axis].max()
 
     print("Модель: %s" % path)
     print("Треугольников: %d" % len(tris))
-    print("Габарит по X: %.3f .. %.3f (длина %.3f мм)"
-          % (x_min, x_max, x_max - x_min))
+    print("Габариты: X %.2f, Y %.2f, Z %.2f мм"
+          % tuple(tris[:, :, i].max() - tris[:, :, i].min() for i in range(3)))
+    print("Ось движения: %s, габарит %.3f .. %.3f (длина %.3f мм)"
+          % (axis_name.upper(), x_min, x_max, x_max - x_min))
     print("Полный объём:  %.3f мм^3" % v_total)
     print("Кусков: %d, целевой объём куска: %.3f мм^3" % (n, v_total / n))
     print()
-    print("Эталонные резы (координата X и расстояние от начала модели):")
+    print("Эталонные резы (координата по оси %s и расстояние от начала):"
+          % axis_name.upper())
     for i, c in enumerate(cuts, 1):
-        print("  рез %d: x = %10.4f   от начала = %8.4f мм"
-              % (i, c, c - x_min))
+        print("  рез %d: %s = %10.4f   от начала = %8.4f мм"
+              % (i, axis_name, c, c - x_min))
 
 
 if __name__ == "__main__":

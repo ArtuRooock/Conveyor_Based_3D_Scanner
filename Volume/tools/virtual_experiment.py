@@ -7,7 +7,10 @@
 target_volume = V/N и сравнивает резы программы с эталонными.
 
 Использование:
-    python virtual_experiment.py модель.stl N_КУСКОВ
+    python virtual_experiment.py модель.stl N_КУСКОВ [ОСЬ]
+
+ОСЬ - вдоль какой оси модель едет по ленте: x, y или z (по умолчанию x).
+Если модель длинная по Z, укажите z - иначе резы пойдут поперёк детали.
 
 Требует: numpy, scipy, numpy-stl + наши volume_core.py, stream_api.py,
 reference_cuts.py в той же папке.
@@ -18,19 +21,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 from stl import mesh
-from tools.reference_cuts import equal_volume_cuts
+from reference_cuts import equal_volume_cuts
 from stream_api import VolumeStream, CutParams, DetailParams
-
 
 # --------------------------- CONFIG ---------------------------
 
 N_POINTS   = 500_000    # сколько точек сэмплировать с поверхности
-NOISE      = 0.0        # шум сканера, мм (СКО)
+NOISE      = 0.1        # шум сканера, мм (СКО)
 BELT_SPEED = 50.0       # мм/с
 FPS        = 40.0       # кадров в секунду
 CAM_ZONE   = 15.0       # ширина зоны обзора камер, мм
-SLICE_STEP = 0.25        # толщина слоя алгоритма
-CELL       = 0.1       # пиксель растра площади
+SLICE_STEP = 0.5        # толщина слоя алгоритма
+CELL       = 0.15       # пиксель растра площади
 # режим геометрии: для произвольной замкнутой модели контур строится
 # по реальным точкам; для модели с плоским дном поставь True/True
 CLOSED_BOTTOM = False
@@ -57,11 +59,20 @@ def main():
         print(__doc__)
         return
     path, n_pieces = sys.argv[1], int(sys.argv[2])
+    axis_name = sys.argv[3].lower() if len(sys.argv) > 3 else "x"
+    axis = {"x": 0, "y": 1, "z": 2}[axis_name]
     rng = np.random.default_rng(0)
 
     # --- эталон ---
     m = mesh.Mesh.from_file(path)
     tris = m.vectors.astype(float)
+    print("Габариты модели: X %.2f, Y %.2f, Z %.2f мм"
+          % tuple(tris[:, :, i].max() - tris[:, :, i].min() for i in range(3)))
+    if axis != 0:
+        # ставим ось движения на место X: дальше весь код работает как есть
+        order = [axis] + [i for i in (0, 1, 2) if i != axis]
+        tris = tris[:, :, order]
+        print("Ось движения %s переставлена на X" % axis_name.upper())
     v_true, cuts_x = equal_volume_cuts(tris, n_pieces)
     x_min = tris[:, :, 0].min()
     x_max = tris[:, :, 0].max()
