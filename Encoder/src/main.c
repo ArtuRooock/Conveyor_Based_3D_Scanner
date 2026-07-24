@@ -19,7 +19,7 @@
 #define STEPS_PER_REVOLUTION   3600.0f
 
 // Длина окружности колеса/вала, вращаемого энкодером, в мм
-#define WHEEL_CIRCUMFERENCE_MM  86.8854152L
+#define WHEEL_CIRCUMFERENCE_MM  8.57232L
 
 // Интервал между замерами скорости, мс
 #define MEASURE_INTERVAL_MS 200
