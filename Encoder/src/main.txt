@@ -1,0 +1,102 @@
+#include <stdbool.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "esp_system.h"
+#include "esp_log.h"
+#include <unistd.h>
+#include "driver/uart_vfs.h"
+#include "esp_timer.h"
+
+#include "rotary_encoder.h"
+#include "esp_task_wdt.h"
+#include "stdio.h"
+
+#include "mbedtls/base64.h"
+
+#define TAG "rotary_encoder"
+
+
+#define RESET_TICKS 40
+
+#define ROT_ENC_A_GPIO 27
+#define ROT_ENC_B_GPIO 26
+
+#define ENABLE_HALF_STEPS false  // Set to true to enable tracking of rotary encoder at half step resolution
+#define RESET_AT          0      // Set to a positive non-zero number to reset the position if this value is exceeded
+#define FLIP_DIRECTION    false  // Set to true to reverse the clockwise/counterclockwise sense
+
+#define LED1_GPIO 16
+#define LED2_GPIO 17
+
+void turn_on_leds() {
+   gpio_set_level(LED1_GPIO, 1);
+   gpio_set_level(LED2_GPIO, 1);
+}
+
+void turn_off_leds() {
+   gpio_set_level(LED1_GPIO, 0);
+   gpio_set_level(LED2_GPIO, 0);
+}
+
+void app_main(void) {
+    ESP_ERROR_CHECK(gpio_install_isr_service(0));
+    uart_vfs_dev_use_nonblocking(0);
+
+    unsigned char payload[8+4] = {0};
+    unsigned char buffer[256] = {0};
+
+    rotary_encoder_state_t state = { 0 };
+    rotary_encoder_info_t info = { 0 };
+
+    int ps = 0;
+
+    ESP_ERROR_CHECK(rotary_encoder_init(&info, ROT_ENC_A_GPIO, ROT_ENC_B_GPIO));
+    ESP_ERROR_CHECK(rotary_encoder_enable_half_steps(&info, ENABLE_HALF_STEPS));
+
+    gpio_pad_select_gpio(LED1_GPIO);
+    gpio_set_direction(LED1_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(LED1_GPIO, 0);
+
+    gpio_pad_select_gpio(LED2_GPIO);
+    gpio_set_direction(LED2_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(LED2_GPIO, 0);
+    
+    rotary_encoder_reset(&info);
+    while (1)
+    {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        //esp_task_wdt_reset();
+        char t = getchar();
+        switch (t){
+        case '1':
+            turn_on_leds();
+            break;
+        case '2':
+            turn_off_leds();
+            break;
+        case '3':
+            ESP_ERROR_CHECK(rotary_encoder_reset(&info));
+            ps = 0;
+            break;
+        default:
+            break;
+        }
+        ps++;
+        if (ps % 20 != 0) {
+            continue;
+        } 
+        
+        ESP_ERROR_CHECK(rotary_encoder_get_state(&info, &state));
+        *(int32_t *)(&payload[0]) = state.position;
+        *(int64_t *)(&payload[4]) = esp_timer_get_time();
+        size_t bv = 0;
+        ESP_ERROR_CHECK(mbedtls_base64_encode( buffer, 256, &bv, payload, 12));
+        buffer[bv] = '\0';
+
+        printf(">]> %s\n", buffer);
+    }
+    
+    ESP_ERROR_CHECK(rotary_encoder_uninit(&info));
+}
