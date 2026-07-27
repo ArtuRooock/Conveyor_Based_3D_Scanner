@@ -41,8 +41,10 @@ def click_and_crop(event, x, y, flags, param):
 
 
 if __name__ == '__main__':
-    directory = "img/laser miniData"
-    calib = np.load(f"calib_{cam}.npz")
+    numCam = int(input("Number of camera: "))
+    numStep = int(input("Number of step: "))
+    directory = f"Frames/Cam{numCam}_Step{numStep}"
+    calib = np.load(f"CalibrationFiles/Cam{numCam}/calib_{cam}{numCam}.npz")
     print(calib['mtx'])
     mtx = calib['mtx']
 
@@ -149,7 +151,7 @@ if __name__ == '__main__':
         print(
         '{' + f"{psns[i][0]}, {psns[i][1]}, {psns[i][2]}, {cam_ptss[i][0]}, {cam_ptss[i][1]}" + '},')
 
-    np.savez(f'pts_{cam}.npz', psns=psns, cam_ptss=cam_ptss)
+    np.savez(f'CalibrationFiles/Cam{numCam}/pts_{cam}{numCam}.npz', psns=psns, cam_ptss=cam_ptss)
     cv2.destroyAllWindows()
 
     print("Next: call CXX application 'optimize_camera_angle_baseline' to find baseline and laser angle params")

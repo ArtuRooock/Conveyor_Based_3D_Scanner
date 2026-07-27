@@ -109,14 +109,15 @@ def angle_between(v1, v2):
     return np.rad2deg(np.arccos(dot_pr / norms))
 
 if __name__ == '__main__':
+    numCam = int(input("Number of camera: "))
     directory = "imgs"
 
-    image_nolaser_move = f"img/plane/{cam}_2.png"
-    image_nolaser = f"img/plane/{cam}_1.png"
-    image_laser = f"img/plane/{cam}_0.png"
+    image_nolaser_move = f"Frames/Cam{numCam}_Step3/{cam}_008.png"
+    image_nolaser = f"Frames/Cam{numCam}_Step3/{cam}_006.png"
+    image_laser = f"Frames/Cam{numCam}_Step3/{cam}_002.png"
 
-    calib = np.load(f'calib_{cam}.npz')
-    las = np.load(f"result_step3.npz")["baf"]
+    calib = np.load(f'CalibrationFiles/Cam{numCam}/calib_{cam}{numCam}_f.npz')
+    las = np.load(f"CalibrationFiles/Cam{numCam}/result_step3_{cam}{numCam}.npz")["baf"]
 
     print(las)
 
@@ -275,4 +276,4 @@ if __name__ == '__main__':
     print("T:")
     print(f"{conv_center}")
 
-    np.savez(f'plane_{cam}.npz', e=eN, pc=conv_center)
+    np.savez(f'CalibrationFiles/Cam{numCam}/plane_{cam}{numCam}.npz', e=eN, pc=conv_center)

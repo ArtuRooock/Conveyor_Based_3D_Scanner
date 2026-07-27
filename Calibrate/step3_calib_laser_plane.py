@@ -19,7 +19,6 @@ if cam == "basler":
 else:
     img_shape = (1280, 800)
 
-image = f"img\laser miniData\china_030.png"
 
 DET_RADIUS = 120
 Xp = 0
@@ -50,7 +49,10 @@ def click_and_crop(event, x, y, flags, param):
 
 
 if __name__ == '__main__':
-    calib = np.load(f"calib_{cam}.npz")
+    numCam = int(input("Number of camera: "))
+    calib = np.load(f"CalibrationFiles/Cam{numCam}/calib_{cam}{numCam}_f.npz")
+
+    image = f"Frames/Cam{numCam}_Step2/china_024.png" # CЮДА НОМЕР СНИМКА!!!!
 
     print(calib['mtx'])
     mtx = calib['mtx']
@@ -153,7 +155,7 @@ if __name__ == '__main__':
         cam_ptss.append(cam_pts)
 
 
-    np.savez(f'angle_{cam}.npz', psns=psns, cam_ptss=cam_ptss)
+    np.savez(f'CalibrationFiles/Cam{numCam}/angle_{cam}{numCam}.npz', psns=psns, cam_ptss=cam_ptss)
     cv2.destroyAllWindows()
 
     print("Next: call CXX application 'optimize_laser_angle' to find laser angle params")

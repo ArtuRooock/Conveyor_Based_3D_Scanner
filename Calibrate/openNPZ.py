@@ -1,7 +1,7 @@
 import numpy as np
 
 
-data = np.load("calib_china.npz")
+data = np.load("CalibrationFiles/Cam1/calib_china1.npz")
 print(data.files)
 
 rvecs = data["rvecs"]
@@ -10,7 +10,7 @@ mtx = data["mtx"]
 dist = data["dist"]
 img_shape = data["img_shape"]
 
-print(rvecs)
+print(mtx)
 # print(tvecs)
 # print(mtx)
 # print(dist)

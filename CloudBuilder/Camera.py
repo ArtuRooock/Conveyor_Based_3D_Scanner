@@ -69,3 +69,10 @@ class Camera:
             self.__video_thread__.join()
         if self.cap:
             self.cap.release()
+
+
+if __name__ == "__main__":
+    cam = Camera(3)
+    mat = cam.snapshot()
+    cv.imshow("Win", mat)
+    cv.waitKey(-1)

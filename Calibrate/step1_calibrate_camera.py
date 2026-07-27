@@ -17,9 +17,11 @@ else:
 
 
 if __name__ == '__main__':
+    numCam = int(input("Number of camera: "))
+    numStep = int(input("Number of step: "))
     print("Loading images with checkerboard")
     print(img_shape)
-    directory = "img/calib"
+    directory = f"Frames/Cam{numCam}_Step{numStep}"
     corners = []
     objpoints = []
     lf = None
@@ -50,7 +52,7 @@ if __name__ == '__main__':
     # print(newcameramtx)
     print("")
 
-    np.savez(f"calib_{cam}.npz",
+    np.savez(f"CalibrationFiles/Cam{numCam}/calib_{cam}{numCam}.npz",
              rvecs=rvecs, tvecs=tvecs, mtx=mtx, dist=dist, img_shape=img_shape)
     f = os.path.join(directory, lf)
     print(f)

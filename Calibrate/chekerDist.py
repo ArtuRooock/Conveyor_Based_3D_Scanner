@@ -63,7 +63,7 @@ class CalibData:
 
 
 def load_calibration(conf_path: str, cam_name: str) -> CalibData:
-    calib = np.load(f"CalibrationFiles/Cam2_Fix/calib_{cam_name}.npz")
+    calib = np.load(f"CalibrationFiles/Cam1/calib_china1.npz")
     camera_mtx = calib["mtx"]
     camera_dist = calib["dist"]
     img_shape = calib["img_shape"]
@@ -76,13 +76,13 @@ def load_calibration(conf_path: str, cam_name: str) -> CalibData:
         (int(img_shape[0]), int(img_shape[1])), cv.CV_32FC1,
     )
 
-    opt = np.load(f"CalibrationFiles/Cam2_Fix/result_step3_{cam_name}.npz")
+    opt = np.load(f"CalibrationFiles/Cam1/result_step3_china1.npz")
     baf = opt["baf"]
     b = baf[0]
     th = baf[1] * (np.pi / 180.0)
     fi = baf[2] * (np.pi / 180.0)
 
-    plane = np.load(f"CalibrationFiles/Cam2_Fix/plane_{cam_name}.npz")
+    plane = np.load(f"CalibrationFiles/Cam1/plane_china1.npz")
     r_raw = plane["e"]
     t_raw = plane["pc"]
     R = r_raw  # same convention as the C++ R(i%3, i/3) fill
@@ -132,7 +132,7 @@ def triangulate_rows(
 DIR: str = "Cam2"
 CAM = 0
 
-cap = cv.VideoCapture(1)
+cap = cv.VideoCapture(6)
 cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv.CAP_PROP_FRAME_HEIGHT, 800)
 cap.set(cv.CAP_PROP_FPS, 120)

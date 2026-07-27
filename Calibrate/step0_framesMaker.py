@@ -2,9 +2,7 @@ import cv2
 from pathlib import Path
 
 
-INPUT_VIDEO_PATH = r"C:\Users\Artem\Yandex.Disk\МАИ\2 курс\4 семестр\Практика\3D_Scanner\video4scaner\step4_scan.avi"
-OUTPUT_DIR = r"C:\Users\Artem\Yandex.Disk\МАИ\2 курс\4 семестр\Практика\3D_Scanner\video4scaner\examples\code\img\calib4"
-FRAME_INTERVAL = 20
+
 
 def save_frame_unicode(frame, save_path: Path) -> bool:
     ret, buf = cv2.imencode('.jpg', frame)
@@ -55,5 +53,8 @@ def extract_frames(video_path: str, output_dir: str, interval: int) -> None:
     print(f"Все кадры находятся в: {output_dir.resolve()}")
 
 if __name__ == "__main__":
-    extract_frames(INPUT_VIDEO_PATH, OUTPUT_DIR, FRAME_INTERVAL)
+    numCam = int(input("Number of camera: "))
+    numStep = int(input("Number of step: "))
+    FRAME_INTERVAL = int(input("Speed of frames: "))
+    extract_frames(f"InputVideos/Cam{numCam}/Cam{numCam}_{numStep}.avi", f"Frames/Cam{numCam}_Step{numStep}", FRAME_INTERVAL)
 

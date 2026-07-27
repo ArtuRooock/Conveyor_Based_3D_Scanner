@@ -1,0 +1,4 @@
+./optimize_camera_angle_baseline ../CalibrationFiles/Cam1/calib_china1_f.npz ../CalibrationFiles/Cam1/pts_china1_f.npz ../CalibrationFiles/Cam1/result1_2.npz -30 30 -25 25 0.001
+./optimize_camera_angle_baseline ../CalibrationFiles/Cam2/calib_china2_f.npz ../CalibrationFiles/Cam2/pts_china2_f.npz ../CalibrationFiles/Cam2/result2_2.npz -30 30 -25 25 0.001
+
+./optimise_laser_angle ../CalibrationFiles/Cam1/calib_china1_f.npz ../CalibrationFiles/Cam1/angle_china1_f.npz ../CalibrationFiles/Cam1/result_step3_china1.npz 0.1

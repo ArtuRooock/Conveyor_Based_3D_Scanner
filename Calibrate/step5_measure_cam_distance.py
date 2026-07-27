@@ -12,11 +12,11 @@ CALIB_FILE_CAM1 = r'CalibrationFiles/Cam1/calib_china1.npz'
 CALIB_FILE_CAM2 = r'CalibrationFiles/Cam2/calib_china2.npz'
 
 # Индексы камер (обычно 0 и 1, но могут быть другими)
-CAM1_INDEX = 1
-CAM2_INDEX = 2
+CAM1_INDEX = 6
+CAM2_INDEX = 8
 
 # Настройки UART
-UART_PORT = 'COM3'
+UART_PORT = '/dev/ttyUSB0'
 UART_BAUDRATE = 115200
 
 mtx1_per = np.load(r"CalibrationFiles/Cam1/plane_china1.npz")

@@ -14,9 +14,9 @@ def to_legacy_npz(src_path, dst_path):
 # to_legacy_npz('CalibrationFiles/Cam2/pts_china2.npz', 'CalibrationFiles/Cam2/pts_china2_f.npz')
 # to_legacy_npz('angle_china.npz', 'angle_china_fixed.npz')
 
-# to_legacy_npz('CalibrationFiles/Cam1/angle_china1.npz', 'CalibrationFiles/Cam1/angle_china1_f.npz')
-# to_legacy_npz('CalibrationFiles/Cam2/angle_china2.npz', 'CalibrationFiles/Cam2/angle_china2_f.npz')
+to_legacy_npz('CalibrationFiles/Cam1/angle_china1.npz', 'CalibrationFiles/Cam1/angle_china1_f.npz')
+to_legacy_npz('CalibrationFiles/Cam2/angle_china2.npz', 'CalibrationFiles/Cam2/angle_china2_f.npz')
 #
 # to_legacy_npz('CalibrationFiles/Cam2_Fix/calib_china2.npz', 'CalibrationFiles/Cam2_Fix/calib_china2_f.npz')
 # to_legacy_npz('CalibrationFiles/Cam2_Fix/pts_china2.npz', 'CalibrationFiles/Cam2_Fix/pts_china2_f.npz')
-to_legacy_npz('CalibrationFiles/Cam2/angle_china2.npz', 'CalibrationFiles/Cam2/angle_china2_f.npz')
+# to_legacy_npz('CalibrationFiles/Cam2/angle_china2.npz', 'CalibrationFiles/Cam2/angle_china2_f.npz')

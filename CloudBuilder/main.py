@@ -1,5 +1,5 @@
 from MotionData import MotionData, FrameAndOffset
-from CloudBuilder_ import CloudBuilder, CalibData
+from CloudBuilder import CloudBuilder, CalibData
 from LaserDetector import laser_detector, cutter, get_click_coordinates
 import cv2 as cv
 from dataclasses import dataclass
@@ -35,14 +35,14 @@ class CamSettings:
     laser_up: int
 
 
-CAM_1 = 0
-CAM_2 = 1
-CALIB_PATH = Path("CloudBuilder", "CalibrationFiles")
+CAM_1 = 6
+CAM_2 = 8
+CALIB_PATH = Path("Calibrate", "CalibrationFiles")
 OUTPUT_PATH = Path("Out")
 ALL_POINTS: list[NDArray] = []
-COM = "COM5"
+COM = "/dev/ttyUSB0"
 OFFSET_KEY = "speed_mms"
-INTER_CAM_DISTANCE = -15.273888
+INTER_CAM_DISTANCE = -15.035101648521511
 
 CLOUD_1, CLOUD_2 = [], []
 
@@ -91,13 +91,13 @@ if __name__ == "__main__":
     reader: ComReader = ComReader(COM)
     reader.start_read()
 
-    cam1 = MotionData(1, reader)
-    cam2 = MotionData(0, reader)
+    cam1 = MotionData(CAM_1, reader)
+    cam2 = MotionData(CAM_2, reader)
 
     cold_frame1 = cam1.snapshot()
     rect1 = get_rect(cold_frame1, "cam1")
     cam1_settings = CamSettings(
-        Path(CALIB_PATH, "Cam1"), "china1", rect1, 50, 255)
+        Path(CALIB_PATH, "Cam1"), "china1", rect1, 150, 255)
 
     cold_frame2 = cam2.snapshot()
     rect2 = get_rect(cold_frame2, "cam2")
